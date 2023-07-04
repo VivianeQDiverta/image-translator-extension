@@ -12,7 +12,7 @@ const imgClickHandler = async (img) => {
     };
   });
 
-  fetch(`https://viviane-internship-app.s3.kuroco-edge.jp/translate`, {
+  const res = await fetch(`https://viviane-internship-app.s3.kuroco-edge.jp/translate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'text/html',
@@ -22,13 +22,19 @@ const imgClickHandler = async (img) => {
       targetLang: targetLang,
     }),
   })
-    .then((res) => res.text())
-    .then((text) => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/html');
-      const result = doc.getElementById('result');
-      img.parentNode.replaceChild(result, img);
-    });
+  // parse response
+  const text = await res.text();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'text/html');
+  // display annotations on top of image
+  const annotationsContainer = doc.getElementById('annotationsContainer');
+  const div = document.createElement('div');
+  div.style.position = 'relative';
+  div.style.width = 'fit-content';
+  div.style.height = 'fit-content';
+  div.appendChild(img.cloneNode());
+  div.appendChild(annotationsContainer);
+  img.replaceWith(div);
 };
 
 for (let img of imgTags) {
