@@ -92,4 +92,18 @@ for (let img of imgTags) {
   img.addEventListener('click', () => imgClickHandler(img));
 }
 
-console.log('Hello from content.js');
+// remove all annotations when target language is changed
+chrome.storage.onChanged.addListener(function (changes, namespace) {
+  for (let key in changes) {
+    if (key === 'targetLang') {
+      const annotations = document.querySelectorAll(
+       "div:has(> .annotationsContainer)"
+      );
+      annotations.forEach((annotation) => {
+        const img = annotation.querySelector('img');
+        annotation.replaceWith(img);
+        img.addEventListener('click', () => imgClickHandler(img));
+      });
+    }
+  }
+});
