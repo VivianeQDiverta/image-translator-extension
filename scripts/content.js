@@ -11,6 +11,10 @@ const translatedImgHandler = async (img) => {
   }
 };
 
+const annotationClickHandler = (annotation) => {
+  annotation.style.opacity = annotation.style.opacity === '0' ? '1' : '0';
+};
+
 const imgClickHandler = async (img) => {
   // prepare body for request
   const targetLang = await chrome.storage.sync.get('targetLang');
@@ -72,8 +76,16 @@ const imgClickHandler = async (img) => {
   div.appendChild(annotationsContainer);
   img.replaceWith(div);
 
-  // add click handler to translated image to toggle annotations
-  div.addEventListener('click', () => translatedImgHandler(div));
+  // add click handler to translated image to toggle every annotations
+  div
+    .querySelector('img')
+    .addEventListener('click', () => translatedImgHandler(div));
+  // add click handler to show/hide each annotation individually
+  annotationsContainer.childNodes.forEach((annotation) => {
+    annotation.addEventListener('click', () =>
+      annotationClickHandler(annotation)
+    );
+  });
 };
 
 for (let img of imgTags) {
