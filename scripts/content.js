@@ -14,13 +14,29 @@ const translatedImgHandler = async (img) => {
 const imgClickHandler = async (img) => {
   // prepare body for request
   const targetLang = await chrome.storage.sync.get('targetLang');
-  const imageSrc = await fetch(img.src);
-  const imageBlob = await imageSrc.blob();
   const binaryImage = await new Promise((resolve) => {
     const reader = new FileReader();
-    reader.readAsBinaryString(imageBlob);
-    reader.onloadend = () => {
-      resolve(reader.result);
+    const imgObj = new Image();
+    imgObj.src = img.src;
+    imgObj.onload = () => {
+      // convert images to jpg for performance and to support svg
+      const canvas = document.createElement('canvas');
+      ctx = canvas.getContext('2d');
+      canvas.width = imgObj.width;
+      canvas.height = imgObj.height;
+      // fill canvas with white background
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // draw image on top of background
+      ctx.drawImage(imgObj, 0, 0);
+
+      // convert canvas containing converted image to binary string
+      canvas.toBlob((blob) => {
+        reader.readAsBinaryString(blob);
+        reader.onloadend = () => {
+          resolve(reader.result);
+        };
+      }, 'image/jpg');
     };
   });
 
