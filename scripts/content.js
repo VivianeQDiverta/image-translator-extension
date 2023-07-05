@@ -15,7 +15,43 @@ const annotationClickHandler = (annotation) => {
   annotation.style.opacity = annotation.style.opacity === '0' ? '1' : '0';
 };
 
+const generateLoading = () => {
+  // Loading text
+  const content = document.createElement('p');
+  content.innerText = 'Loading...';
+  content.style.display = 'table-cell';
+  content.style.verticalAlign = 'middle';
+  content.style.textAlign = 'center';
+  // Loading background
+  const loading = document.createElement('div');
+  loading.style.display = 'table';
+  loading.style.width = '100%';
+  loading.style.height = '100%';
+  loading.style.top = '0';
+  loading.style.left = '0';
+  loading.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+  loading.style.color = 'white';
+  loading.style.position = 'absolute';
+  loading.appendChild(content);
+  return loading;
+};
+
 const imgClickHandler = async (img) => {
+  // prepare image container
+  const imageContainer = document.createElement('div');
+  imageContainer.style.position = 'relative';
+  imageContainer.style.width = 'fit-content';
+  imageContainer.style.height = 'fit-content';
+  img.style.filter = 'blur(3px)'; // blur the image during loading
+  imageContainer.appendChild(img.cloneNode());
+
+  // add loading text
+  const loadingDiv = generateLoading();
+  imageContainer.appendChild(loadingDiv);
+
+  // replace image with image container
+  img.replaceWith(imageContainer);
+
   // prepare body for request
   const targetLang = await chrome.storage.sync.get('targetLang');
   const binaryImage = await new Promise((resolve) => {
@@ -64,22 +100,20 @@ const imgClickHandler = async (img) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(text, 'text/html');
 
+  // remove loading text and image blur
+  loadingDiv.remove();
+  imageContainer.querySelector('img').style.filter = 'none';
+
   // display annotations on top of image
   const annotationsContainer = doc.getElementsByClassName(
     'annotationsContainer'
   )[0];
-  const div = document.createElement('div');
-  div.style.position = 'relative';
-  div.style.width = 'fit-content';
-  div.style.height = 'fit-content';
-  div.appendChild(img.cloneNode());
-  div.appendChild(annotationsContainer);
-  img.replaceWith(div);
+  imageContainer.appendChild(annotationsContainer);
 
   // add click handler to translated image to toggle every annotations
-  div
+  imageContainer
     .querySelector('img')
-    .addEventListener('click', () => translatedImgHandler(div));
+    .addEventListener('click', () => translatedImgHandler(imageContainer));
   // add click handler to show/hide each annotation individually
   annotationsContainer.childNodes.forEach((annotation) => {
     annotation.addEventListener('click', () =>
