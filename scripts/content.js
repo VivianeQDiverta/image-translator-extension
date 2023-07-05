@@ -1,14 +1,9 @@
 const imgTags = document.getElementsByTagName('img');
 
-const translatedImgHandler = async (img) => {
+const translatedImgHandler = async (annotationsContainer) => {
   // toggle annotations
-  const existingAnnotations = img.parentNode.getElementsByClassName(
-    'annotationsContainer'
-  )[0];
-  if (existingAnnotations) {
-    existingAnnotations.style.display =
-      existingAnnotations.style.display === 'none' ? 'block' : 'none';
-  }
+  annotationsContainer.style.display =
+    annotationsContainer.style.display === 'none' ? 'block' : 'none';
 };
 
 const annotationClickHandler = (annotation) => {
@@ -113,7 +108,9 @@ const imgClickHandler = async (img) => {
   // add click handler to translated image to toggle every annotations
   imageContainer
     .querySelector('img')
-    .addEventListener('click', () => translatedImgHandler(imageContainer));
+    .addEventListener('click', () =>
+      translatedImgHandler(annotationsContainer)
+    );
   // add click handler to show/hide each annotation individually
   annotationsContainer.childNodes.forEach((annotation) => {
     annotation.addEventListener('click', () =>
@@ -131,7 +128,7 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let key in changes) {
     if (key === 'targetLang') {
       const annotations = document.querySelectorAll(
-       "div:has(> .annotationsContainer)"
+        'div:has(> .annotationsContainer)'
       );
       annotations.forEach((annotation) => {
         const img = annotation.querySelector('img');
