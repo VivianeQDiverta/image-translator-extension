@@ -1,5 +1,4 @@
 (async () => {
-  console.log('init listeners');
   const handlersSrc = chrome.runtime.getURL('scripts/handlers.js');
   const handlers = await import(handlersSrc);
 
