@@ -1,10 +1,15 @@
-const toggleAnnotations = async (annotationsContainer) => {
+const toggleAnnotations = (annotationsContainer) => {
   annotationsContainer.style.display =
     annotationsContainer.style.display === 'none' ? 'block' : 'none';
 };
 
 const annotationClickHandler = (annotation) => {
   annotation.style.opacity = annotation.style.opacity === '0' ? '1' : '0';
+};
+
+const toggleErrorMessage = (errorMessage, img) => {
+  errorMessage.style.opacity = errorMessage.style.opacity === '0' ? '1' : '0';
+  img.style.filter = img.style.filter === 'none' ? 'blur(3px)' : 'none';
 };
 
 const generateLoading = () => {
@@ -25,31 +30,32 @@ const generateLoading = () => {
   loading.style.color = 'white';
   loading.style.position = 'absolute';
   loading.appendChild(content);
+  loading.className = 'loading';
   return loading;
 };
 
-const imgClickHandler = async (img) => {
+const imgClickHandler = async (originalImg) => {
   // prepare image container
   const imageContainer = document.createElement('div');
   imageContainer.style.position = 'relative';
   imageContainer.style.width = 'fit-content';
   imageContainer.style.height = 'fit-content';
-  img.style.filter = 'blur(3px)'; // blur the image during loading
-  imageContainer.appendChild(img.cloneNode());
+  originalImg.style.filter = 'blur(3px)'; // blur the image during loading
+  imageContainer.appendChild(originalImg.cloneNode());
 
   // add loading text
   const loadingDiv = generateLoading();
   imageContainer.appendChild(loadingDiv);
 
   // replace image with image container
-  img.replaceWith(imageContainer);
+  originalImg.replaceWith(imageContainer);
 
   // prepare body for request
   const targetLang = await chrome.storage.sync.get('targetLang');
   const binaryImage = await new Promise((resolve) => {
     const reader = new FileReader();
     const imgObj = new Image();
-    imgObj.src = img.src;
+    imgObj.src = originalImg.src;
     imgObj.onload = () => {
       // convert images to jpg for performance and to support svg
       const canvas = document.createElement('canvas');
@@ -92,43 +98,64 @@ const imgClickHandler = async (img) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(text, 'text/html');
 
-  // remove loading text and image blur
-  loadingDiv.remove();
-  imageContainer.querySelector('img').style.filter = 'none';
-
-  // display annotations on top of image
   const annotationsContainer = doc.getElementsByClassName(
     'annotationsContainer'
   )[0];
-  imageContainer.appendChild(annotationsContainer);
+  const img = imageContainer.querySelector('img');
+  if (annotationsContainer) {
+    // remove loading text and image blur
+    loadingDiv.remove();
+    img.style.filter = 'none';
 
-  // add click handler to translated image to toggle every annotations
-  imageContainer
-    .querySelector('img')
-    .addEventListener('click', () => toggleAnnotations(annotationsContainer));
-  // add click handler to show/hide each annotation individually
-  annotationsContainer.childNodes.forEach((annotation) => {
-    annotation.addEventListener('click', () =>
-      annotationClickHandler(annotation)
+    // display annotations on top of image
+    imageContainer.appendChild(annotationsContainer);
+
+    // add click handler to translated image to toggle every annotations
+    img.addEventListener('click', () =>
+      toggleAnnotations(annotationsContainer)
     );
-  });
+    // add click handler to show/hide each annotation individually
+    annotationsContainer.childNodes.forEach((annotation) => {
+      annotation.addEventListener('click', () =>
+        annotationClickHandler(annotation)
+      );
+    });
+  } else {
+    // display error message
+    const message = doc.getElementById('result').innerText;
+    loadingDiv.firstChild.innerText = message;
+    loadingDiv.addEventListener('click', () =>
+      toggleErrorMessage(loadingDiv, img)
+    );
+  }
 };
 
 // remove all annotations when target language is changed
 chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let key in changes) {
     if (key === 'targetLang') {
+      // remove all annotations
       const annotations = document.querySelectorAll(
         'div:has(> .annotationsContainer)'
       );
       annotations.forEach((annotation) => {
         const img = annotation.querySelector('img');
         annotation.replaceWith(img);
-        img.addEventListener('click', () => imgClickHandler(img));
       });
+
+      // remove all loading divs
+      document.querySelectorAll('.loading').forEach((div) => {
+        div.remove();
+      });
+
+      // register again click handlers
+      const imgTags = document.getElementsByTagName('img');
+      for (let img of imgTags) {
+        img.style.filter = 'none'; // remove blur
+        img.addEventListener('click', () => imgClickHandler(img));
+      }
     }
   }
 });
-
 
 export { imgClickHandler };
