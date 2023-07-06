@@ -1,7 +1,6 @@
 const imgTags = document.getElementsByTagName('img');
 
-const translatedImgHandler = async (annotationsContainer) => {
-  // toggle annotations
+const toggleAnnotations = async (annotationsContainer) => {
   annotationsContainer.style.display =
     annotationsContainer.style.display === 'none' ? 'block' : 'none';
 };
@@ -109,7 +108,7 @@ const imgClickHandler = async (img) => {
   imageContainer
     .querySelector('img')
     .addEventListener('click', () =>
-      translatedImgHandler(annotationsContainer)
+      toggleAnnotations(annotationsContainer)
     );
   // add click handler to show/hide each annotation individually
   annotationsContainer.childNodes.forEach((annotation) => {
