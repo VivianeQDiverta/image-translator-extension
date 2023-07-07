@@ -130,32 +130,51 @@ const imgClickHandler = async (originalImg) => {
   }
 };
 
+const resetPage = () => {
+  // remove all annotations
+  const annotations = document.querySelectorAll(
+    'div:has(> .annotationsContainer)'
+  );
+  annotations.forEach((annotation) => {
+    const img = annotation.querySelector('img');
+    annotation.replaceWith(img);
+  });
+
+  // remove all loading divs
+  document.querySelectorAll('.loading').forEach((div) => {
+    div.remove();
+  });
+
+  // remove all event listeners by cloning and replacing all images
+  const imgTags = document.getElementsByTagName('img');
+  for (let img of imgTags) {
+    img.replaceWith(img.cloneNode());
+  }
+};
+
+const registerClickHandlers = () => {
+  console.log('registering click handlers');
+  const imgTags = document.getElementsByTagName('img');
+  for (let img of imgTags) {
+    img.addEventListener('click', () => imgClickHandler(img));
+  }
+};
+
 // remove all annotations when target language is changed
 chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let key in changes) {
     if (key === 'targetLang') {
-      // remove all annotations
-      const annotations = document.querySelectorAll(
-        'div:has(> .annotationsContainer)'
-      );
-      annotations.forEach((annotation) => {
-        const img = annotation.querySelector('img');
-        annotation.replaceWith(img);
-      });
-
-      // remove all loading divs
-      document.querySelectorAll('.loading').forEach((div) => {
-        div.remove();
-      });
-
-      // register again click handlers
-      const imgTags = document.getElementsByTagName('img');
-      for (let img of imgTags) {
-        img.style.filter = 'none'; // remove blur
-        img.addEventListener('click', () => imgClickHandler(img));
+      resetPage();
+      registerClickHandlers();
+    } else if (key === 'enabled') {
+      console.log(changes[key].newValue);
+      if (changes[key].newValue) {
+        registerClickHandlers();
+      } else {
+        resetPage();
       }
     }
   }
 });
 
-export { imgClickHandler };
+export { imgClickHandler, registerClickHandlers };
