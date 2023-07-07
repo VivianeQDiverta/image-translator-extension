@@ -35,6 +35,10 @@ const generateLoading = () => {
 };
 
 const imgClickHandler = async (originalImg) => {
+  // need image ratio to calculate annotations position
+  const heightRatio = originalImg.height / originalImg.naturalHeight;
+  const widthRatio = originalImg.width / originalImg.naturalWidth;
+
   // prepare image container
   const imageContainer = document.createElement('div');
   imageContainer.style.position = 'relative';
@@ -116,6 +120,9 @@ const imgClickHandler = async (originalImg) => {
     );
     // add click handler to show/hide each annotation individually
     annotationsContainer.childNodes.forEach((annotation) => {
+      // adjust position of annotations depending on image ratio
+      annotation.style.top = `${annotation.offsetTop * heightRatio}px`;
+      annotation.style.left = `${annotation.offsetLeft * widthRatio}px`;
       annotation.addEventListener('click', () =>
         annotationClickHandler(annotation)
       );
