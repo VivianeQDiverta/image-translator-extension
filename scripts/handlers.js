@@ -120,9 +120,11 @@ const imgClickHandler = async (originalImg) => {
     );
     // add click handler to show/hide each annotation individually
     annotationsContainer.childNodes.forEach((annotation) => {
-      // adjust position of annotations depending on image ratio
+      // adjust position and font size of annotations depending on image ratio
       annotation.style.top = `${annotation.offsetTop * heightRatio}px`;
       annotation.style.left = `${annotation.offsetLeft * widthRatio}px`;
+      const originalFontSize = annotation.style.fontSize.replace('px', '');
+      annotation.style.fontSize = `${originalFontSize * heightRatio}px`;
       annotation.addEventListener('click', () =>
         annotationClickHandler(annotation)
       );
