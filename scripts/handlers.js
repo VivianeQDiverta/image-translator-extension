@@ -162,7 +162,6 @@ const resetPage = () => {
 };
 
 const registerClickHandlers = () => {
-  console.log('registering click handlers');
   const imgTags = document.getElementsByTagName('img');
   for (let img of imgTags) {
     img.addEventListener('click', () => imgClickHandler(img));
@@ -176,7 +175,6 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
       resetPage();
       registerClickHandlers();
     } else if (key === 'enabled') {
-      console.log(changes[key].newValue);
       if (changes[key].newValue) {
         registerClickHandlers();
       } else {
